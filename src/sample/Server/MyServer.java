@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MyServer {
-    private final int PORT = 8187;
+    private final int PORT = 8184;
 
     private List<ClientHandler> clients;
     private AuthService authService;
@@ -32,6 +32,7 @@ public class MyServer {
             System.out.println("Ошибка в работе сервера");
         } finally {
             if (authService != null) {
+                System.out.println("Остановка сервера аутентификации");
                 authService.stop();
             }
         }
@@ -68,12 +69,26 @@ public class MyServer {
         }
     }
 
+    private void broadcastClientList() {
+        StringBuilder sb = new StringBuilder("/clientlist ");
+        for (ClientHandler c : clients) {
+            sb.append(c.getName()).append(" ");
+        }
+
+        String msg = sb.toString();
+        for (ClientHandler c : clients) {
+            c.sendMsg(msg);
+        }
+    }
+
     public synchronized void unsubscribe(ClientHandler o) {
         clients.remove(o);
+        broadcastClientList();
     }
 
     public synchronized void subscribe(ClientHandler o) {
         clients.add(o);
+        broadcastClientList();
     }
 }
 

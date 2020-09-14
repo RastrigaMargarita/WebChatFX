@@ -1,4 +1,4 @@
-package sample;
+package sample.Client;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -10,7 +10,8 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent root;
+        root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("Simple chat");
         primaryStage.setScene(new Scene(root, 600, 275));
         primaryStage.show();
