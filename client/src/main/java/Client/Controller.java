@@ -1,4 +1,4 @@
-package sample.Client;
+package Client;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -86,8 +86,6 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     private void connect() {
@@ -100,11 +98,11 @@ public class Controller implements Initializable {
             Thread t = new Thread(() -> {
 
                 try {
-                    socket.setSoTimeout(60000);
+
                     while (true) {
 
                         String strFromServer = in.readUTF();
-                        socket.setSoTimeout(0);
+
                         if (strFromServer.startsWith("/authok")) {
                             nickname = strFromServer.split(" ", 2)[1];
                             ChatArea.appendText("Добро пожаловать, " + nickname + "\n");
@@ -119,10 +117,7 @@ public class Controller implements Initializable {
                         } else if (strFromServer.startsWith("/regno")) {
                             regController.addMsgToTextArea("Регистрация не получилась \n возможно логин или ник заняты");
                             regController.closeWindow();
-
-                            //break;
                         } else {
-
                             ChatArea.appendText(strFromServer + "\n");
                         }
                     }
@@ -167,7 +162,6 @@ public class Controller implements Initializable {
         }
     }
 
-
     public void sendMsg(ActionEvent actionEvent) {
 
         try {
@@ -182,16 +176,23 @@ public class Controller implements Initializable {
     public void tryToReg(String login, String password, String nickname) {
         String msg = String.format("/reg %s %s %s", login, password, nickname);
 
-//        if (socket == null || socket.isClosed()) {
-//            connect();
-//        }
-
         try {
             out.writeUTF(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        System.out.println(msg);
+    }
+
+    public void replaceNick(String login, String password, String nickname) {
+        String msg = String.format("/ren %s %s %s", login, password, nickname);
+
+        try {
+            out.writeUTF(msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         System.out.println(msg);
     }
@@ -206,7 +207,7 @@ public class Controller implements Initializable {
 
     private void createRegWindow() {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("registr.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/registr.fxml"));
             Parent root = fxmlLoader.load();
             regStage = new Stage();
             regStage.setTitle("Регистрация нового пользователя");
@@ -221,7 +222,6 @@ public class Controller implements Initializable {
             e.printStackTrace();
         }
     }
-
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
