@@ -1,4 +1,4 @@
-package sample.Server;
+package Server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -8,22 +8,20 @@ import java.util.List;
 
 public class MyServer {
     private final int PORT = 8184;
-
     private List<ClientHandler> clients;
-    private AuthService authService;
     private String[] names;
+    private SQLHandler sqlHandler;
 
-    public AuthService getAuthService() {
-        return authService;
+    public SQLHandler getSqlHandler() {
+        return sqlHandler;
     }
 
     public MyServer() {
+        sqlHandler = new SQLHandler();
         try (ServerSocket server = new ServerSocket(PORT)) {
-            authService = new BaseAuthService();
-            authService.start();
             clients = new ArrayList<>();
             while (true) {
-                System.out.println("Сервер ожидает подключения");
+                System.out.println("Сервер запущен и ожидает клиентов");
                 Socket socket = server.accept();
                 System.out.println("Клиент подключился");
                 new ClientHandler(this, socket);
@@ -31,10 +29,7 @@ public class MyServer {
         } catch (IOException e) {
             System.out.println("Ошибка в работе сервера");
         } finally {
-            if (authService != null) {
-                System.out.println("Остановка сервера аутентификации");
-                authService.stop();
-            }
+            sqlHandler.disconnectSQL();
         }
     }
 
@@ -90,5 +85,6 @@ public class MyServer {
         clients.add(o);
         broadcastClientList();
     }
+
 }
 

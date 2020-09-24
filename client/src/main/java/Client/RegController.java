@@ -1,4 +1,4 @@
-package sample.Client;
+package Client;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -7,8 +7,6 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-
-import java.beans.Visibility;
 
 public class RegController {
     private final String IP_ADDRESS = "localhost";
@@ -25,6 +23,11 @@ public class RegController {
 
     public void tryToReg(ActionEvent actionEvent) {
         controller.tryToReg(loginField.getText().trim(),
+                passwordField.getText().trim(),
+                nickField.getText().trim());
+    }
+    public void replaceNick(ActionEvent actionEvent) {
+        controller.replaceNick(loginField.getText().trim(),
                 passwordField.getText().trim(),
                 nickField.getText().trim());
     }
@@ -48,4 +51,6 @@ public class RegController {
             e.printStackTrace();
         }
     }
+
+
 }

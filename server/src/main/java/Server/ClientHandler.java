@@ -1,10 +1,12 @@
-package sample.Server;
+package Server;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
+import java.sql.*;
+
+import static com.sun.org.apache.xalan.internal.lib.ExsltDatetime.date;
 
 public class ClientHandler {
     private MyServer myServer;
@@ -19,7 +21,9 @@ public class ClientHandler {
     }
 
     public ClientHandler(MyServer myServer, Socket socket) {
+
         try {
+
             this.myServer = myServer;
             this.socket = socket;
             this.in = new DataInputStream(socket.getInputStream());
@@ -49,44 +53,57 @@ public class ClientHandler {
 
     public void authentication() throws IOException {
         while (true) {
-
-                String str = in.readUTF();
-
-                if (str.startsWith("/auth")) {
-                    String[] parts = str.split("\\s");
-                    if (parts.length < 3) {
-                        continue;
-                    }
-                    String nick = myServer.getAuthService().getNickByLoginPass(parts[1], parts[2]);
-                    if (nick != null) {
-                        if (!myServer.isNickBusy(nick)) {
-                            sendMsg("/authok " + nick);
-                            name = nick;
-                            myServer.broadcastMsg(name + " зашел в чат");
-                            myServer.subscribe(this);
-                            return;
-                        } else {
-                            sendMsg("Учетная запись уже используется");
-                        }
-                    } else {
-                        sendMsg("Неверные логин/пароль");
-                    }
+            socket.setSoTimeout(120000);
+            String str = in.readUTF();
+            socket.setSoTimeout(0);
+            if (str.startsWith("/auth")) {
+                String[] parts = str.split("\\s");
+                if (parts.length < 3) {
+                    continue;
                 }
-                if (str.startsWith("/reg ")) {
-                    String[] token = str.split("\\s");
-                    if (token.length < 4) {
-                        continue;
-                    }
-
-                    boolean b = myServer.getAuthService()
-                            .registration(token[1], token[2], token[3]);
-                    if (b) {
-                        sendMsg("/regok");
+                String nick = myServer.getSqlHandler().getNickByLoginPass(parts[1], parts[2]);
+                if (nick != null) {
+                    if (!myServer.isNickBusy(nick)) {
+                        sendMsg("/authok " + nick);
+                        name = nick;
+                        myServer.broadcastMsg(name + " зашел в чат");
+                        myServer.getSqlHandler().writelog(name, "enter", date(), "");
+                        myServer.subscribe(this);
+                        return;
                     } else {
-                        sendMsg("/regno");
+                        sendMsg("Учетная запись уже используется");
                     }
+                } else {
+                    sendMsg("Неверные логин/пароль");
+                }
+            }
+            if (str.startsWith("/reg ")) {
+                String[] token = str.split("\\s");
+                if (token.length < 4) {
+                    continue;
+                }
 
+                boolean b = myServer.getSqlHandler()
+                        .registration(token[1], token[2], token[3]);
+                if (b) {
+                    sendMsg("/regok");
+                } else {
+                    sendMsg("/regno");
+                }
+            }
+            if (str.startsWith("/ren ")) {
+                String[] token = str.split("\\s");
+                if (token.length < 4) {
+                    continue;
+                }
 
+                boolean b = myServer.getSqlHandler()
+                        .replaceNick(token[1], token[2], token[3]);
+                if (b) {
+                    sendMsg("/regok");
+                } else {
+                    sendMsg("/regno");
+                }
             }
         }
     }
@@ -101,6 +118,7 @@ public class ClientHandler {
                 return;
             }
             myServer.broadcastMsg(name + ": " + strFromClient);
+            myServer.getSqlHandler().writelog(name, "post", date(), strFromClient);
         }
     }
 
@@ -115,6 +133,7 @@ public class ClientHandler {
     public void closeConnection() {
         myServer.unsubscribe(this);
         myServer.broadcastMsg(name + " вышел из чата");
+        myServer.getSqlHandler().writelog(name, "out", date(), "");
         try {
             in.close();
         } catch (IOException e) {
@@ -132,5 +151,7 @@ public class ClientHandler {
         }
         System.out.println("Коннект закрыт");
     }
+
+
 }
 
