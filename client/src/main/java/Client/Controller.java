@@ -16,17 +16,19 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
     private final String IP_ADDRESS = "localhost";
     private final int PORT = 8184;
+    BufferedOutputStream bos;
+
+    File filelog;
     @FXML
     TextArea ChatArea;
     @FXML
@@ -107,6 +109,27 @@ public class Controller implements Initializable {
                             nickname = strFromServer.split(" ", 2)[1];
                             ChatArea.appendText("Добро пожаловать, " + nickname + "\n");
                             setAuthorized(true);
+
+                            filelog = new File("history_" + LoginField.getText().trim().toLowerCase() + ".txt");
+                            bos = new BufferedOutputStream(new FileOutputStream(filelog, true));
+                            BufferedReader bis = new BufferedReader(new InputStreamReader(new FileInputStream(filelog)));
+
+                            LinkedList<String> lines = new LinkedList<>();
+                            for (String tmp; (tmp = bis.readLine()) != null; ) {
+                                if (lines.add(tmp) && lines.size() > 5) {
+                                    lines.remove();
+                                }
+                            }
+                            bis.close();
+                            if (lines.size() > 0) {
+                                ChatArea.appendText("--------------------- \n");
+                                ChatArea.appendText("До этого в эфире было: \n");
+                                for (String line : lines) {
+                                    ChatArea.appendText(line + "\n");
+                                }
+                                ChatArea.appendText("--------------------- \n");
+                            }
+
                             break;
                         }
 
@@ -121,6 +144,8 @@ public class Controller implements Initializable {
                             ChatArea.appendText(strFromServer + "\n");
                         }
                     }
+
+
                     while (true) {
                         String strFromServer = in.readUTF();
 
@@ -138,6 +163,8 @@ public class Controller implements Initializable {
                         } else {
                             ChatArea.appendText(strFromServer);
                             ChatArea.appendText("\n");
+                            bos.write((strFromServer + "\n").getBytes());
+                            bos.flush();
                         }
                     }
                 } catch (SocketTimeoutException e) {
@@ -150,6 +177,12 @@ public class Controller implements Initializable {
                     setAuthorized(false);
                     try {
                         socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        bos.close();
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
