@@ -25,7 +25,7 @@ import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
     private final String IP_ADDRESS = "localhost";
-    private final int PORT = 8184;
+    private final int PORT = 8187;
     BufferedOutputStream bos;
 
     File filelog;

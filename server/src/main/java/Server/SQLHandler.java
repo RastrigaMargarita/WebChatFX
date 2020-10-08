@@ -21,7 +21,6 @@ public class SQLHandler {
             throwables.printStackTrace();
             disconnectSQL();
         } finally {
-            // disconnectSQL();
 
         }
     }
